@@ -61,7 +61,7 @@ export const EmptyUpload: React.FC<EmptyUploadProps> = ({ onUploadSuccess, onCan
       </div>
 
       <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-        <span className="font-semibold text-slate-700">TimeSense AI</span>: Not just what happened &mdash; what happened, when, in what order, and for how long.
+        <span className="font-semibold text-slate-700">ChronosAI</span>: Not just what happened &mdash; what happened, when, in what order, and for how long.
       </p>
 
       {/* Drag & Drop Target */}

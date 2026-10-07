@@ -108,7 +108,7 @@ def run_video_pipeline(video_id: str):
                 cv2.putText(annotated_frame, txt, (int(x1), max(15, int(y1) - 5)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
             # Draw timecode overlay
-            cv2.putText(annotated_frame, f"TimeSense AI | {seconds_to_timestamp(timestamp)}", (16, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+            cv2.putText(annotated_frame, f"ChronosAI | {seconds_to_timestamp(timestamp)}", (16, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
             out_writer.write(annotated_frame)
 
             if processed_frames % 20 == 0:

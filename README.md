@@ -1,4 +1,4 @@
-# TimeSense AI — Video Understanding & Temporal Reasoning
+# ChronosAI — Video Understanding & Temporal Reasoning
 
 > **HNX26PSI02 — HackNex 2026 Problem Statement 02**  
 > *"Not just what happened — what happened, when, in what order, and for how long."*
@@ -7,9 +7,9 @@
 
 ## 1. Project Overview & Innovation
 
-Traditional computer vision applications are limited to frame-level object detection (e.g. "person detected", "truck detected"). **TimeSense AI** introduces an **Object-Aware Temporal Event Graph** coupled with **Timestamp-Grounded Question Answering**.
+Traditional computer vision applications are limited to frame-level object detection (e.g. "person detected", "truck detected"). **ChronosAI** introduces an **Object-Aware Temporal Event Graph** coupled with **Timestamp-Grounded Question Answering**.
 
-Instead of piping raw video into an LLM and hoping for non-hallucinated timecodes, TimeSense AI extracts persistent spatial trajectories, converts state transitions into semantic events, generates directed temporal relationships (`BEFORE`, `AFTER`, `IMMEDIATELY_BEFORE`, `DURING`, `OVERLAPS`, `COUNT`, `DURATION`), and resolves natural-language queries with exact timestamps and visual evidence.
+Instead of piping raw video into an LLM and hoping for non-hallucinated timecodes, ChronosAI extracts persistent spatial trajectories, converts state transitions into semantic events, generates directed temporal relationships (`BEFORE`, `AFTER`, `IMMEDIATELY_BEFORE`, `DURING`, `OVERLAPS`, `COUNT`, `DURATION`), and resolves natural-language queries with exact timestamps and visual evidence.
 
 ---
 

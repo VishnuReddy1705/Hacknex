@@ -147,7 +147,7 @@ export const api = {
         delta_seconds: askRes.graph_relation.time_difference,
         relation: askRes.graph_relation.relation
       } : null,
-      reasoning_trace: [`Resolved via TimeSense AI Temporal Event Graph`]
+      reasoning_trace: [`Resolved via ChronosAI Temporal Event Graph`]
     };
   },
 

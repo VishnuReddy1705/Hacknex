@@ -2,7 +2,7 @@ import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "TimeSense AI"
+    PROJECT_NAME: str = "ChronosAI"
     TAGLINE: str = "Not just what happened — what happened, when, in what order, and for how long."
     VERSION: str = "2.0.0"
     
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     DATA_DIR: str = os.path.join(BASE_DIR, "data")
     UPLOAD_DIR: str = os.path.join(DATA_DIR, "uploads")
     PROCESSED_DIR: str = os.path.join(DATA_DIR, "processed")
-    DATABASE_URL: str = f"sqlite:///{os.path.join(DATA_DIR, 'database', 'timesense.db')}"
+    DATABASE_URL: str = f"sqlite:///{os.path.join(DATA_DIR, 'database', 'chronos.db')}"
 
     # Vision-Language Model / LLM (Optional)
     LLM_API_KEY: str = ""
