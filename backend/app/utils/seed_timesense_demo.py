@@ -9,10 +9,13 @@ def seed_timesense_demo():
     db = SessionLocal()
 
     video_id = "timesense_demo_cctv"
-    existing = db.query(Video).filter(Video.id == video_id).first()
-    if existing:
-        db.delete(existing)
-        db.commit()
+    from backend.app.database import EventRelationship, ObjectTrack
+    db.query(EventRelationship).filter(EventRelationship.video_id == video_id).delete()
+    db.query(Event).filter(Event.video_id == video_id).delete()
+    db.query(ObjectTrack).filter(ObjectTrack.video_id == video_id).delete()
+    db.query(TrackedObject).filter(TrackedObject.video_id == video_id).delete()
+    db.query(Video).filter(Video.id == video_id).delete()
+    db.commit()
 
     sample_filename = "sample_cctv.mp4"
     video = Video(
@@ -82,7 +85,7 @@ def seed_timesense_demo():
         )
     ]
     for o in objects:
-        db.add(o)
+        db.merge(o)
     db.commit()
 
     # Exact events from Section 18
@@ -112,7 +115,7 @@ def seed_timesense_demo():
             confidence=conf,
             description=desc
         )
-        db.add(ev)
+        db.merge(ev)
     db.commit()
 
     # Construct the Temporal Event Graph

@@ -21,7 +21,7 @@ interface VideoAnalysisPageProps {
   activeVideo: VideoMetadata | null;
   events: TemporalEvent[];
   entities: EntityTrack[];
-  seekTime: number | null;
+  seekTime: number | { time: number; nonce: number } | null;
   onSeek: (seconds: number) => void;
   onRefreshData: () => void;
 }
@@ -86,6 +86,9 @@ export const VideoAnalysisPage: React.FC<VideoAnalysisPageProps> = ({
             videoId={activeVideo.id}
             hasAnnotated={activeVideo.has_annotated_video}
             seekTime={seekTime}
+            entities={entities}
+            videoWidth={activeVideo.width}
+            videoHeight={activeVideo.height}
             onTimeUpdate={(t) => setCurrentTime(t)}
           />
 

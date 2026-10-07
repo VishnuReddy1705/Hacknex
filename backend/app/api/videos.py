@@ -108,6 +108,15 @@ def get_video_objects(video_id: str, db: Session = Depends(get_db)):
     objs = db.query(TrackedObject).filter(TrackedObject.video_id == video_id).order_by(TrackedObject.first_seen.asc()).all()
     res = []
     for o in objs:
+        track_points = []
+        if hasattr(o, 'tracks') and o.tracks:
+            for tr in o.tracks:
+                track_points.append({
+                    "frame_number": tr.frame_number,
+                    "timestamp": tr.timestamp,
+                    "bbox": [tr.bbox_x1, tr.bbox_y1, tr.bbox_x2, tr.bbox_y2],
+                    "confidence": tr.confidence
+                })
         res.append(ObjectResponse(
             id=o.id,
             video_id=o.video_id,
@@ -118,7 +127,7 @@ def get_video_objects(video_id: str, db: Session = Depends(get_db)):
             last_seen=o.last_seen,
             duration=o.duration,
             confidence=o.confidence,
-            trajectory=[]
+            trajectory=track_points
         ))
     return res
 

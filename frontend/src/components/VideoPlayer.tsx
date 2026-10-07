@@ -3,11 +3,16 @@ import { Play, Pause, RotateCcw, Volume2, VolumeX, Maximize2, Sparkles } from 'l
 import { formatTimestamp } from '../utils/format';
 import { api } from '../services/api';
 
+import { EntityTrack } from '../types';
+
 interface VideoPlayerProps {
   videoId: string;
   hasAnnotated: boolean;
   onTimeUpdate?: (currentTime: number) => void;
-  seekTime?: number | null;
+  seekTime?: number | { time: number; nonce: number } | null;
+  entities?: EntityTrack[];
+  videoWidth?: number;
+  videoHeight?: number;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -15,27 +20,34 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   hasAnnotated,
   onTimeUpdate,
   seekTime,
+  entities = [],
+  videoWidth = 1920,
+  videoHeight = 1080,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [showAnnotated, setShowAnnotated] = useState(hasAnnotated);
+  const [showOverlays, setShowOverlays] = useState(true);
 
-  useEffect(() => {
-    setShowAnnotated(hasAnnotated);
-  }, [hasAnnotated]);
-
-  // Handle external seek triggers (e.g. clicking evidence timestamps)
+  // Handle external seek triggers (e.g. clicking event timeline or evidence timestamps)
   useEffect(() => {
     if (seekTime !== null && seekTime !== undefined && videoRef.current) {
-      videoRef.current.currentTime = seekTime;
-      setCurrentTime(seekTime);
-      if (videoRef.current.paused) {
-        videoRef.current.play().catch(() => {});
-        setIsPlaying(true);
+      const targetSeconds = typeof seekTime === 'number' ? seekTime : seekTime.time;
+      videoRef.current.currentTime = targetSeconds;
+      setCurrentTime(targetSeconds);
+
+      // Give browser a tick to position the frame buffer then start playback
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((err) => {
+            console.warn('Auto-play after seek prevented or interrupted:', err);
+          });
       }
     }
   }, [seekTime]);
@@ -86,15 +98,53 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
-  const videoSrc = api.getVideoStreamUrl(videoId, showAnnotated);
+  const videoSrc = api.getVideoStreamUrl(videoId, false);
+
+  // Compute active bounding boxes at currentTime
+  const activeBoxes = React.useMemo(() => {
+    if (!showOverlays || !entities.length) return [];
+    const boxes: Array<{
+      id: string;
+      label: string;
+      className: string;
+      bbox: [number, number, number, number];
+      conf: number;
+    }> = [];
+
+    for (const ent of entities) {
+      if (currentTime >= ent.first_seen && currentTime <= ent.last_seen) {
+        let bestPoint = ent.trajectory?.[0];
+        if (ent.trajectory && ent.trajectory.length > 0) {
+          let minDiff = 999999;
+          for (const pt of ent.trajectory) {
+            const diff = Math.abs(pt.timestamp - currentTime);
+            if (diff < minDiff) {
+              minDiff = diff;
+              bestPoint = pt;
+            }
+          }
+        }
+        if (bestPoint && bestPoint.bbox) {
+          boxes.push({
+            id: ent.entity_id,
+            label: `${ent.class_name.toUpperCase()} #${ent.track_id}`,
+            className: ent.class_name,
+            bbox: bestPoint.bbox,
+            conf: Math.round(ent.confidence * 100)
+          });
+        }
+      }
+    }
+    return boxes;
+  }, [entities, currentTime, showOverlays]);
 
   return (
     <div className="flex flex-col bg-slate-900 rounded-lg overflow-hidden border border-slate-300 shadow-sm">
-      {/* Video Container */}
-      <div className="relative aspect-video bg-black flex items-center justify-center group">
+      {/* Video Container with Overlays */}
+      <div ref={containerRef} className="relative aspect-video bg-black flex items-center justify-center group overflow-hidden">
         <video
           ref={videoRef}
-          key={`${videoId}-${showAnnotated}`}
+          key={videoId}
           src={videoSrc}
           className="w-full h-full object-contain"
           onTimeUpdate={handleTimeUpdate}
@@ -105,13 +155,62 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           playsInline
         />
 
-        {/* Annotated Stream Indicator Badge */}
-        {hasAnnotated && (
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-black/75 backdrop-blur-sm text-white border border-white/20">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span>{showAnnotated ? 'Track Overlay: ON' : 'Raw Video: ON'}</span>
-          </div>
+        {/* Dynamic SVG Bounding Box & Track ID Overlay */}
+        {showOverlays && (
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox={`0 0 ${videoWidth || 1920} ${videoHeight || 1080}`}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {activeBoxes.map((b) => {
+              const [x1, y1, x2, y2] = b.bbox;
+              const w = Math.max(10, x2 - x1);
+              const h = Math.max(10, y2 - y1);
+              const isPerson = b.className.toLowerCase().includes('person');
+              const strokeColor = isPerson ? '#6366f1' : '#f97316';
+              const fillColor = isPerson ? 'rgba(99, 102, 241, 0.15)' : 'rgba(249, 115, 22, 0.15)';
+              return (
+                <g key={b.id}>
+                  <rect
+                    x={x1}
+                    y={y1}
+                    width={w}
+                    height={h}
+                    fill={fillColor}
+                    stroke={strokeColor}
+                    strokeWidth="3"
+                    rx="4"
+                  />
+                  {/* Label badge */}
+                  <rect
+                    x={x1}
+                    y={Math.max(0, y1 - 24)}
+                    width={Math.max(120, b.label.length * 10)}
+                    height="22"
+                    fill={strokeColor}
+                    rx="3"
+                  />
+                  <text
+                    x={x1 + 6}
+                    y={Math.max(16, y1 - 8)}
+                    fill="#ffffff"
+                    fontSize="13"
+                    fontWeight="bold"
+                    fontFamily="monospace"
+                  >
+                    {b.label} ({b.conf}%)
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
         )}
+
+        {/* Track Overlay Status Badge */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-black/75 backdrop-blur-sm text-white border border-white/20">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <span>{showOverlays ? `Track IDs Active (${activeBoxes.length})` : 'Track IDs: Hidden'}</span>
+        </div>
 
         {/* Center Play Overlay on pause */}
         {!isPlaying && (
@@ -171,19 +270,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Toggle Annotated Overlay */}
-            {hasAnnotated && (
-              <button
-                onClick={() => setShowAnnotated(!showAnnotated)}
-                className={`px-2 py-1 rounded text-xs font-medium border transition-colors ${
-                  showAnnotated
-                    ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50'
-                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
-                }`}
-              >
-                Track IDs
-              </button>
-            )}
+            {/* Toggle Track IDs Overlay */}
+            <button
+              onClick={() => setShowOverlays(!showOverlays)}
+              className={`px-2 py-1 rounded text-xs font-medium border transition-colors ${
+                showOverlays
+                  ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+              }`}
+            >
+              Track IDs
+            </button>
 
             {/* Playback speed selector */}
             <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded px-1 py-0.5">

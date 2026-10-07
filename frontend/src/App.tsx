@@ -18,7 +18,7 @@ export function App() {
   const [activeVideo, setActiveVideo] = useState<VideoMetadata | null>(null);
   const [events, setEvents] = useState<TemporalEvent[]>([]);
   const [entities, setEntities] = useState<EntityTrack[]>([]);
-  const [seekTime, setSeekTime] = useState<number | null>(null);
+  const [seekTime, setSeekTime] = useState<{ time: number; nonce: number } | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [systemHealth, setSystemHealth] = useState<any>(null);
 
@@ -118,7 +118,7 @@ export function App() {
   };
 
   const handleSeek = (seconds: number) => {
-    setSeekTime(seconds);
+    setSeekTime({ time: seconds, nonce: Date.now() });
   };
 
   return (
@@ -175,6 +175,8 @@ export function App() {
             <EventTimelinePage
               activeVideo={activeVideo}
               events={events}
+              entities={entities}
+              seekTime={seekTime}
               onSeekToTime={handleSeek}
               onNavigateToAnalysis={() => setCurrentTab('analysis')}
             />
@@ -183,6 +185,8 @@ export function App() {
           {currentTab === 'ask' && (
             <AskVideoPage
               activeVideo={activeVideo}
+              entities={entities}
+              seekTime={seekTime}
               onSeekToTime={handleSeek}
               onNavigateToAnalysis={() => setCurrentTab('analysis')}
             />

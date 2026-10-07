@@ -92,7 +92,13 @@ export const api = {
       last_seen: d.last_seen,
       duration: d.duration,
       confidence: d.confidence,
-      event_count: 0
+      event_count: 0,
+      trajectory: (d.trajectory || []).map((t: any) => ({
+        frame: t.frame_number,
+        timestamp: t.timestamp,
+        bbox: t.bbox,
+        confidence: t.confidence
+      }))
     }));
   },
 

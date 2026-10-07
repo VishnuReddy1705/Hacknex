@@ -39,5 +39,12 @@ Thumbs.db
 # Weights (cached locally)
 *.pt
 
-# Database & Runtime Uploads (ignore test outputs)
-data/processed/*.mp4
+# Database & Runtime Uploads (ignore test outputs and large videos)
+data/processed/
+data/uploads/
+data/database/
+*.mp4
+*.avi
+*.mov
+*.mkv
+timesense-ai.zip
