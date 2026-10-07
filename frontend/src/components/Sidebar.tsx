@@ -47,10 +47,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div>
             <div className="font-semibold text-slate-900 text-sm tracking-tight flex items-center gap-1.5">
-              TemporalLens
+              TimeSense AI
               <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">PS02</span>
             </div>
-            <div className="text-[11px] text-slate-400 font-medium leading-none">Video Reasoning AI</div>
+            <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">Temporal Reasoning Engine</div>
           </div>
         </div>
 

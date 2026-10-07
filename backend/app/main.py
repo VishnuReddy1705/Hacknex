@@ -1,21 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-import os
+import torch
 
-from backend.app.database.session import init_db
+from backend.app.config import settings
+from backend.app.database import init_db
 from backend.app.api.videos import router as videos_router
 from backend.app.api.events import router as events_router
-from backend.app.api.entities import router as entities_router
-from backend.app.api.query import router as query_router
+from backend.app.api.questions import router as questions_router
 
 app = FastAPI(
-    title="TemporalLens API",
-    description="Video Understanding & Temporal Reasoning Engine for HackNex 2026",
-    version="1.0.0"
+    title=settings.PROJECT_NAME,
+    description=f"HNX26PSI02 — {settings.TAGLINE}",
+    version=settings.VERSION
 )
 
-# Enable CORS for local Vite dev server
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,21 +26,20 @@ app.add_middleware(
 def on_startup():
     init_db()
 
-# Mount API routers
 app.include_router(videos_router, prefix="/api")
 app.include_router(events_router, prefix="/api")
-app.include_router(entities_router, prefix="/api")
-app.include_router(query_router, prefix="/api")
+app.include_router(questions_router, prefix="/api")
 
 @app.get("/api/health")
 def health_check():
-    import torch
     return {
         "status": "healthy",
-        "service": "TemporalLens Video Reasoning",
+        "project": settings.PROJECT_NAME,
+        "tagline": settings.TAGLINE,
+        "version": settings.VERSION,
         "gpu_available": torch.cuda.is_available(),
         "device": "cuda" if torch.cuda.is_available() else "cpu",
-        "version": "1.0.0"
+        "llm_configured": bool(settings.LLM_API_KEY)
     }
 
 if __name__ == "__main__":

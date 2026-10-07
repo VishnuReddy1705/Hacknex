@@ -60,9 +60,8 @@ export const EmptyUpload: React.FC<EmptyUploadProps> = ({ onUploadSuccess, onCan
         <Film className="w-6 h-6" />
       </div>
 
-      <h2 className="text-lg font-semibold text-slate-900 tracking-tight">Upload Surveillance or Activity Video</h2>
-      <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
-        TemporalLens extracts persistent entity tracks, detects interactions, and indexes events into a searchable temporal timeline.
+      <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+        <span className="font-semibold text-slate-700">TimeSense AI</span>: Not just what happened &mdash; what happened, when, in what order, and for how long.
       </p>
 
       {/* Drag & Drop Target */}
